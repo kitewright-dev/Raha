@@ -23,7 +23,7 @@ go get -tool golang.org/x/mobile/cmd/gobind@latest
   -target=android/arm64,android/arm \
   -androidapi=26 \
   -javapkg=ir.raha.nativebridge \
-  -ldflags="-s -w -buildid=" \
+  -ldflags="-s -w -buildid= -checklinkname=0" \
   -trimpath \
   -o "$OUT" \
   .
