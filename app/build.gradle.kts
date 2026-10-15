@@ -30,4 +30,11 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-service:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Generated locally by scripts/build-brokerbridge-android.sh. It embeds
+    // the pinned OpenRung brokerapi verifier; generated binaries are not kept
+    // in git.
+    if (file("libs/brokerbridge.aar").exists()) {
+        implementation(files("libs/brokerbridge.aar"))
+    }
 }
