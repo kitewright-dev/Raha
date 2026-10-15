@@ -1,0 +1,83 @@
+go: downloading golang.org/x/mobile v0.0.0-20261011034528-197770444867
+go: downloading golang.org/x/mod v0.42.0
+go: downloading golang.org/x/sync v0.24.0
+go: downloading golang.org/x/tools v0.52.0
+go: downloading github.com/xtls/xray-core v0.0.0-20260930074004-b26a91de4f32
+go: downloading github.com/openrung/openrung/brokerapi v0.6.1
+go: downloading golang.org/x/sys v0.48.0
+go: downloading google.golang.org/protobuf v1.36.12
+go: downloading github.com/google/go-cmp v0.7.0
+go: downloading github.com/ghodss/yaml v1.0.1-0.20220118164431-d8423dcdf344
+go: downloading github.com/pelletier/go-toml v1.9.5
+go: downloading github.com/golang/mock v1.7.0-rc.1
+go: downloading golang.org/x/sync v0.23.0
+go: downloading github.com/pires/go-proxyproto v0.15.0
+go: downloading github.com/google/uuid v1.6.0
+go: downloading github.com/robfig/cron/v3 v3.0.1
+go: downloading golang.org/x/net v0.59.0
+go: downloading google.golang.org/grpc v1.84.0
+go: downloading github.com/apernet/quic-go v0.61.1-0.20260806010916-184d081eef3e
+go: downloading github.com/refraction-networking/utls v1.8.3-0.20260301010127-aa6edf4b11af
+go: downloading github.com/miekg/dns v1.1.73
+go: downloading github.com/stretchr/testify v1.12.1
+go: downloading github.com/cloudflare/circl v1.6.5
+go: downloading lukechampine.com/blake3 v1.4.1
+go: downloading golang.zx2c4.com/wireguard v0.0.0-20250521234502-f333402bd9cb
+go: downloading golang.org/x/crypto v0.57.0
+go: downloading github.com/xtls/reality v0.0.0-20260908062103-8cdf7bf9c7f0
+go: downloading github.com/vishvananda/netlink v1.3.1
+go: downloading gvisor.dev/gvisor v0.0.0-20260122175437-89a5d21be8f0
+go: downloading github.com/gorilla/websocket v1.5.3
+go: downloading go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
+go: downloading github.com/klauspost/cpuid/v2 v2.4.0
+go: downloading gopkg.in/yaml.v2 v2.4.0
+go: downloading golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2
+go: downloading golang.zx2c4.com/wireguard/windows v1.1.1
+go: downloading github.com/libp2p/go-nat v1.0.1-0.20250821073202-01afc089f138
+go: downloading github.com/pion/stun/v3 v3.1.7
+go: downloading golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
+go: downloading github.com/andybalholm/brotli v1.0.6
+go: downloading github.com/klauspost/compress v1.17.4
+go: downloading google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800
+go: downloading github.com/juju/ratelimit v1.0.2
+go: downloading github.com/vishvananda/netns v0.0.5
+go: downloading github.com/google/btree v1.1.2
+go: downloading golang.org/x/time v0.14.0
+go: downloading github.com/quic-go/qpack v0.6.0
+go: downloading golang.org/x/text v0.42.0
+go: downloading github.com/huin/goupnp v1.2.0
+go: downloading github.com/jackpal/go-nat-pmp v1.0.2
+go: downloading github.com/koron/go-ssdp v0.0.4
+go: downloading github.com/libp2p/go-netroute v0.2.1
+go: downloading github.com/pion/dtls/v3 v3.1.5
+go: downloading github.com/pion/logging v0.2.4
+go: downloading github.com/pion/transport/v4 v4.1.0
+go: downloading go.yaml.in/yaml/v3 v3.0.5
+go: downloading github.com/google/gopacket v1.1.19
+go: downloading github.com/wlynxg/anet v0.0.5
+go: downloading gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
+go: downloading github.com/quic-go/go-ossfuzz-seeds v0.1.0
+go: downloading go.uber.org/mock v0.5.2
+go: downloading github.com/kr/pretty v0.3.1
+go: downloading github.com/golang/protobuf v1.5.4
+go: downloading gonum.org/v1/gonum v0.17.0
+go: downloading github.com/rogpeppe/go-internal v1.10.0
+go: finding module for package github.com/kr/text
+go: downloading github.com/kr/text v0.2.0
+go: found github.com/kr/text in github.com/kr/text v0.2.0
+go: downloading golang.org/x/crypto v0.58.0
+go: downloading golang.org/x/net v0.61.0
+go: downloading golang.org/x/sys v0.49.0
+go: downloading golang.org/x/text v0.43.0
+go: upgraded golang.org/x/crypto v0.57.0 => v0.58.0
+go: added golang.org/x/mobile v0.0.0-20261011034528-197770444867
+go: upgraded golang.org/x/mod v0.41.0 => v0.42.0
+go: upgraded golang.org/x/net v0.59.0 => v0.61.0
+go: upgraded golang.org/x/sync v0.23.0 => v0.24.0
+go: upgraded golang.org/x/sys v0.48.0 => v0.49.0
+go: upgraded golang.org/x/text v0.42.0 => v0.43.0
+go: upgraded golang.org/x/tools v0.49.0 => v0.52.0
+/home/runner/go/bin/gomobile: go build -ldflags -s -w -buildid= -trimpath -buildmode=c-shared -o=/tmp/gomobile-work-3365749847/android/src/main/jniLibs/armeabi-v7a/libgojni.so ./gobind failed: exit status 1
+# gobind/gobind
+link: github.com/wlynxg/anet: invalid reference to net.zoneCache
+
