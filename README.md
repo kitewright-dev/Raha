@@ -1,87 +1,84 @@
-# Raha
+<div align="center">
 
-Raha is an experimental Android connectivity client focused on resilient, multi-source relay discovery.
+<img src="app/src/main/res/drawable-nodpi/raha_logo.png" width="110" alt="Raha">
 
-## Goal
+# رها
 
-Build a clean Android VPN client that can discover compatible public relay/exit sources, normalize them into one internal model, test reachability, rank candidates, and connect through the best usable path.
+یه وی‌پی‌ان اندرویدی ساده که خودش رله‌ی سالم پیدا می‌کنه و وصلت می‌کنه
 
-Raha is an independent project. It is not OpenRung and is not affiliated with OpenRung.
+[![دانلود](https://img.shields.io/github/v/release/Amirmahdavi2022/Raha?include_prereleases&label=%D8%AF%D8%A7%D9%86%D9%84%D9%88%D8%AF&color=1BA8FF)](https://github.com/Amirmahdavi2022/Raha/releases/latest)
+[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-20E3A0)](LICENSE)
+[![Telegram](https://img.shields.io/badge/telegram-@parsv2r-2AABEE?logo=telegram&logoColor=white)](https://t.me/parsv2r)
 
-## v0.1 plan
+</div>
 
-1. Native Android `VpnService` shell.
-2. Provider abstraction for relay discovery.
-3. OpenRung-compatible provider as the first experimental source.
-4. Normalize candidates into Raha's own relay model.
-5. Reachability/latency checks and candidate ranking.
-6. Direct VLESS + REALITY + Vision connection path.
-7. Add fallback transports only after direct connectivity is proven on real networks.
+---
 
-## Architecture
+## قضیه چیه
+
+رها هیچ سروری از خودش نداره. به شبکه‌ی [OpenRung](https://github.com/openrung/openrung) وصل میشه، یه شبکه که آدمای داوطلب و خود بنیادش توش رله اجرا می‌کنن (یه چیزی تو مایه‌های Snowflake تور). اپ لیست رله‌ها رو می‌گیره، تستشون می‌کنه و با بهترینشون وصلت می‌کنه. نه کانفیگی می‌خواد نه اشتراکی، فقط یه دکمه‌ست.
+
+پروتکلش VLESS + REALITY + Vision هست که از بیرون شبیه یه اتصال TLS معمولی دیده میشه.
+
+> رها یه پروژه‌ی مستقله و ربطی به تیم OpenRung نداره، فقط از شبکه‌ی عمومیشون استفاده می‌کنه.
+
+## وقتی دکمه رو می‌زنی چی میشه
+
+1. لیست رله‌ها از بروکر OpenRung گرفته میشه و امضاش داخل کد native چک میشه. اگه امضا درست نباشه کلا ردش می‌کنه و دنبال راه دیگه نمی‌گرده
+2. رله‌هایی که پروتکلشون جور نیست یا وقتشون تموم شده حذف میشن. وقتشون با ساعت خود سرور مقایسه میشه، پس اگه ساعت گوشیت جلو عقب باشه مشکلی پیش نمیاد
+3. یه تست TCP سریع رو همه زده میشه و ۶ تای بهتر می‌مونن
+4. با هر کدوم یه هندشیک واقعی REALITY زده میشه و یه صفحه از توش باز میشه. سریع‌ترینی که واقعا جواب داد انتخاب میشه
+5. تازه اینجا وی‌پی‌ان باز میشه
+
+اگه هیچ رله‌ای از مرحله‌ی ۴ رد نشه وی‌پی‌ان اصلا روشن نمیشه، که یه وقت اینترنتت قطع نمونه.
+
+## تو اپ چی داری
+
+- یه دکمه‌ی گرد برای وصل و قطع
+- تایمر مدت اتصال
+- حجم دانلود و آپلود با سرعت لحظه‌ای
+- کشور و شهر خروجی با پرچمش
+- لینک مستقیم کانال پشتیبانی
+
+## نصب
+
+آخرین APK رو از [اینجا](https://github.com/Amirmahdavi2022/Raha/releases/latest) بگیر و نصب کن. هر نسخه‌ی جدید روی قبلی نصب میشه و لازم نیست پاکش کنی.
+
+- اندروید ۸ به بالا
+- گوشی‌های ARM (یعنی تقریبا همه‌ی گوشی‌ها)
+- فعلا فقط اندروید، نسخه‌ی آیفون نداره
+
+## چند تا چیز که بهتره بدونی
+
+- رله‌ها خروجی مستقیمن، یعنی کسی که رله رو اجرا می‌کنه می‌تونه ببینه به چه سایتی وصل میشی. محتوای HTTPS رو نمی‌بینه ولی برای کارای خیلی حساس ابزار مناسبی نیست
+- چون رله‌ها داوطلبی هستن کیفیتشون یکی نیست، یکی سریعه یکی کندتر
+- اگه یه روز OpenRung از دسترس خارج بشه رها هم کار نمی‌کنه
+
+## ساختار پروژه
 
 ```text
-Android UI
-    |
-RahaVpnService
-    |
-Raha Core
-    +-- DiscoveryProvider
-    |      +-- OpenRungProvider (v0.1)
-    |      +-- future providers
-    |
-    +-- RelayNormalizer
-    +-- Probe / Ranking
-    +-- Connection Engine
-             |
-          Relay / Exit
-             |
-          Internet
+app/                      اپ اندروید (کاتلین)
+native/rahacore/          هسته‌ی Go: brokerapi برای لیست رله‌ها، Xray-core برای تونل
+scripts/                  اسکریپت ساخت فایل aar هسته
 ```
 
-## Design rules
+## بیلد گرفتن
 
-- No Raha-operated VPS is required for the initial experiment.
-- Do not copy upstream branding or UI.
-- Keep source-specific code behind provider interfaces.
-- Do not assume a public third-party relay network is a permanent entitlement; compatibility and usage policy must be verified.
-- Prefer signed/verified discovery data where the upstream protocol provides it.
-- Never silently downgrade transport security.
-
-## How it works now (v0.1.0)
-
-Tap connect and Raha does this:
-
-1. asks the OpenRung broker for relays through the pinned `brokerapi` (signature + freshness checked in native code, no plain HTTP fallback)
-2. drops anything that isn't VLESS + REALITY + Vision with a valid lease (leases are checked against the broker's signed `server_time`, so a wrong phone clock doesn't kill every relay)
-3. quick TCP check on all of them, keeps the best 6
-4. real REALITY handshake through each of those 6 and fetches a 204 page, picks the fastest one that actually worked
-5. only then opens the VPN and hands the TUN fd to Xray-core's tun inbound
-
-If nothing passes step 4 the VPN never comes up, so you don't end up with a dead tunnel eating your traffic.
-
-## Layout
-
-- `native/rahacore` Go core built with gomobile: `brokerapi` for discovery, Xray-core for the engine
-- `app/` Android app (Kotlin, no XML layouts)
-- `scripts/build-rahacore-android.sh` builds `app/libs/rahacore.aar`
-- CI builds the APK on every push to main, and cuts a release whenever `versionName` changes
-
-## Build
-
-Needs Go (version from `native/rahacore/go.mod`), JDK 17, Android SDK 35 and an NDK.
+لازمه‌ها: Go (نسخه‌ش تو `native/rahacore/go.mod` هست)، JDK 17، Android SDK 35 و NDK
 
 ```sh
 ./scripts/build-rahacore-android.sh
 gradle :app:assembleRelease
 ```
 
-The repo ships a sideload signing key so every build installs over the last one. Don't use it for a store release.
+هر پوش به main رو گیت‌هاب اکشنز بیلد می‌گیره و هر بار `versionName` عوض بشه خودش ریلیز می‌زنه.
 
-## License
+کلیدی که برای امضا تو ریپو گذاشتم فقط برای نصب دستیه، برای انتشار تو استور ازش استفاده نکن.
 
-GPL-3.0-or-later, because the app links OpenRung's `brokerapi` (GPL-3.0-or-later). Xray-core is MPL-2.0.
+## لایسنس
 
-## Status
+GPL-3.0. چون `brokerapi` اوپن‌رانگ هم GPL هست. Xray-core هم MPL-2.0 هست.
 
-Experimental. First build that actually tunnels traffic, still needs real-network testing.
+## پشتیبانی
+
+سوال یا مشکل داشتی بیا کانال [@parsv2r](https://t.me/parsv2r)
