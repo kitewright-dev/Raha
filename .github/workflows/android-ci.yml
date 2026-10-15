@@ -13,14 +13,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
-      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Install Android SDK 35
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager 'platform-tools' 'platforms;android-35' 'build-tools;35.0.0'
       - name: Gradle compile
-        run: ./gradlew :app:compileDebugKotlin --stacktrace
+        run: gradle :app:compileDebugKotlin --stacktrace
 
   brokerbridge:
     runs-on: ubuntu-latest
@@ -28,14 +33,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: 'stable'
-          cache-dependency-path: native/brokerbridge/go.sum
-      - name: Verify module
+          go-version-file: native/brokerbridge/go.mod
+      - name: Resolve and verify module
         working-directory: native/brokerbridge
         run: |
-          go mod download
+          go mod tidy
           go test ./...
           go vet ./...
+          git diff --exit-code -- go.mod
       - name: Ensure release pin
         working-directory: native/brokerbridge
         run: |
