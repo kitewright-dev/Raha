@@ -6,7 +6,7 @@
 
 یه وی‌پی‌ان اندرویدی ساده که خودش رله‌ی سالم پیدا می‌کنه و وصلت می‌کنه
 
-[![دانلود](https://img.shields.io/github/v/release/Amirmahdavi2022/Raha?include_prereleases&label=%D8%AF%D8%A7%D9%86%D9%84%D9%88%D8%AF&color=1BA8FF)](https://github.com/Amirmahdavi2022/Raha/releases/latest)
+[![دانلود](https://img.shields.io/github/v/release/kitewright-dev/Raha?include_prereleases&label=%D8%AF%D8%A7%D9%86%D9%84%D9%88%D8%AF&color=1BA8FF)](https://github.com/kitewright-dev/Raha/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-20E3A0)](LICENSE)
 [![Telegram](https://img.shields.io/badge/telegram-@parsv2r-2AABEE?logo=telegram&logoColor=white)](https://t.me/parsv2r)
 
@@ -51,7 +51,7 @@
 
 ## نصب
 
-آخرین APK رو از [اینجا](https://github.com/Amirmahdavi2022/Raha/releases/latest) بگیر و نصب کن. هر نسخه‌ی جدید روی قبلی نصب میشه و لازم نیست پاکش کنی.
+آخرین APK رو از [اینجا](https://github.com/kitewright-dev/Raha/releases/latest) بگیر و نصب کن. هر نسخه‌ی جدید روی قبلی نصب میشه و لازم نیست پاکش کنی.
 
 - اندروید ۸ به بالا
 - گوشی‌های ARM (یعنی تقریبا همه‌ی گوشی‌ها)

@@ -1,4 +1,4 @@
-module github.com/Amirmahdavi2022/Raha/native/rahacore
+module github.com/kitewright-dev/Raha/native/rahacore
 
 go 1.27
 

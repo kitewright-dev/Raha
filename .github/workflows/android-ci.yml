@@ -89,6 +89,6 @@ jobs:
           cd ci-log
           git init -q
           git config user.name "AM.JMC"
-          git config user.email "Amirmahdavi2022@users.noreply.github.com"
+          git config user.email "272643218+kitewright-dev@users.noreply.github.com"
           git add -A && git commit -qm "ci log ${GITHUB_SHA::7} run ${GITHUB_RUN_ID}" || exit 0
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/ci-log
