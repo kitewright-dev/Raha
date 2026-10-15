@@ -22,7 +22,7 @@ func NewClient(appVersion string) *Client {
     })}
 }
 
-// FetchVerifiedRelays returns only the exact JSON bytes after brokerapi has
+// FetchVerifiedRelays returns the exact JSON bytes after brokerapi has
 // authenticated and validated the relay directory. Kotlin must never perform a
 // fallback HTTP fetch when this operation fails.
 func (c *Client) FetchVerifiedRelays(limit int) (string, error) {
@@ -44,12 +44,10 @@ func (c *Client) FetchVerifiedRelays(limit int) (string, error) {
     if err != nil {
         return "", err
     }
-    if result == nil || result.RelayList == nil {
-        return "", fmt.Errorf("broker returned no verified relay directory")
-    }
-    body, err := result.RelayList.JSON()
-    if err != nil {
-        return "", err
+
+    body := result.RelayList.JSON()
+    if len(body) == 0 {
+        return "", fmt.Errorf("broker returned an empty verified relay directory")
     }
     return string(body), nil
 }
