@@ -3,6 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+val nativeAar = file("libs/rahacore.aar")
+
 android {
     namespace = "ir.raha.app"
     compileSdk = 35
@@ -11,11 +13,36 @@ android {
         applicationId = "ir.raha.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0-alpha01"
+        versionCode = 2
+        versionName = "0.1.0"
+    }
+
+    signingConfigs {
+        // Fixed sideload key so every build installs over the previous one.
+        // Swap for a private key (env vars) before any store release.
+        create("sideload") {
+            storeFile = rootProject.file(System.getenv("RAHA_KEYSTORE") ?: "keystore/raha-sideload.jks")
+            storePassword = System.getenv("RAHA_KEYSTORE_PASSWORD") ?: "rahasideload"
+            keyAlias = System.getenv("RAHA_KEY_ALIAS") ?: "raha"
+            keyPassword = System.getenv("RAHA_KEY_PASSWORD") ?: "rahasideload"
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("sideload")
+        }
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("sideload")
+        }
     }
 
     buildFeatures { buildConfig = true }
+
+    packaging {
+        jniLibs { useLegacyPackaging = true }
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -26,15 +53,14 @@ android {
 
 dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("androidx.lifecycle:lifecycle-service:2.8.7")
+    implementation("androidx.activity:activity-ktx:1.9.3")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
-    // Generated locally by scripts/build-brokerbridge-android.sh. It embeds
-    // the pinned OpenRung brokerapi verifier; generated binaries are not kept
-    // in git.
-    if (file("libs/brokerbridge.aar").exists()) {
-        implementation(files("libs/brokerbridge.aar"))
+    // Built by scripts/build-rahacore-android.sh (brokerapi verifier + Xray
+    // engine). Not kept in git. The app cannot work without it, so fail loudly.
+    if (!nativeAar.exists()) {
+        throw GradleException("app/libs/rahacore.aar is missing — run scripts/build-rahacore-android.sh first")
     }
+    implementation(files(nativeAar))
 }

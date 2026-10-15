@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Raha</string>
+    <string name="notif_channel">VPN status</string>
+    <string name="notif_connecting">Finding a working relay…</string>
+    <string name="notif_connected">Connected via %1$s</string>
+    <string name="disconnect">Disconnect</string>
+</resources>

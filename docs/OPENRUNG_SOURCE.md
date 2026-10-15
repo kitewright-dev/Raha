@@ -10,7 +10,7 @@ For that reason `OpenRungProvider` remains fail-closed until Raha integrates a p
 
 ## Planned adapter
 
-1. Call a small native binding around a pinned release of upstream `brokerapi`.
+1. Call the `rahacore` native binding (`FetchVerifiedRelays`) around a pinned release of upstream `brokerapi`.
 2. Let `brokerapi` perform broker-front selection, TLS policy, redirect refusal, signature verification, and freshness checks.
 3. Receive only the exact verified relay JSON bytes.
 4. Decode those verified bytes into Raha's own `RelayCandidate` model.

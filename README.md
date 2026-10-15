@@ -48,6 +48,40 @@ Raha Core
 - Prefer signed/verified discovery data where the upstream protocol provides it.
 - Never silently downgrade transport security.
 
+## How it works now (v0.1.0)
+
+Tap connect and Raha does this:
+
+1. asks the OpenRung broker for relays through the pinned `brokerapi` (signature + freshness checked in native code, no plain HTTP fallback)
+2. drops anything that isn't VLESS + REALITY + Vision with a valid lease (leases are checked against the broker's signed `server_time`, so a wrong phone clock doesn't kill every relay)
+3. quick TCP check on all of them, keeps the best 6
+4. real REALITY handshake through each of those 6 and fetches a 204 page, picks the fastest one that actually worked
+5. only then opens the VPN and hands the TUN fd to Xray-core's tun inbound
+
+If nothing passes step 4 the VPN never comes up, so you don't end up with a dead tunnel eating your traffic.
+
+## Layout
+
+- `native/rahacore` Go core built with gomobile: `brokerapi` for discovery, Xray-core for the engine
+- `app/` Android app (Kotlin, no XML layouts)
+- `scripts/build-rahacore-android.sh` builds `app/libs/rahacore.aar`
+- CI builds the APK on every push to main, and publishes a release on `v*` tags
+
+## Build
+
+Needs Go (version from `native/rahacore/go.mod`), JDK 17, Android SDK 35 and an NDK.
+
+```sh
+./scripts/build-rahacore-android.sh
+gradle :app:assembleRelease
+```
+
+The repo ships a sideload signing key so every build installs over the last one. Don't use it for a store release.
+
+## License
+
+GPL-3.0-or-later, because the app links OpenRung's `brokerapi` (GPL-3.0-or-later). Xray-core is MPL-2.0.
+
 ## Status
 
-Early experimental scaffold. No production-ready VPN client yet.
+Experimental. First build that actually tunnels traffic, still needs real-network testing.

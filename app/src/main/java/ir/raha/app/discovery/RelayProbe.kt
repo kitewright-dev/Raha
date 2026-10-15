@@ -4,7 +4,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.InetSocketAddress
 import java.net.Socket
-import kotlin.system.measureTimeMillis
 
 data class ProbedRelay(
     val relay: RelayCandidate,
@@ -13,23 +12,21 @@ data class ProbedRelay(
     val error: String? = null
 )
 
-/** Lightweight reachability probe used before handing a relay to the tunnel engine. */
+/** Cheap TCP pre-filter. It only drops dead endpoints; the real test is the native handshake probe. */
 class RelayProbe(
     private val timeoutMs: Int = 2500
 ) {
     suspend fun probe(relay: RelayCandidate): ProbedRelay = withContext(Dispatchers.IO) {
-        var socket: Socket? = null
+        val socket = Socket()
         try {
-            var elapsed = 0L
-            socket = Socket()
-            elapsed = measureTimeMillis {
-                socket.connect(InetSocketAddress(relay.host, relay.port), timeoutMs)
-            }
+            val started = System.nanoTime()
+            socket.connect(InetSocketAddress(relay.host, relay.port), timeoutMs)
+            val elapsed = (System.nanoTime() - started) / 1_000_000
             ProbedRelay(relay, reachable = true, latencyMs = elapsed)
         } catch (t: Throwable) {
             ProbedRelay(relay, reachable = false, latencyMs = null, error = t.javaClass.simpleName)
         } finally {
-            runCatching { socket?.close() }
+            runCatching { socket.close() }
         }
     }
 }

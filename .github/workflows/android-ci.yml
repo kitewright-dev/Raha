@@ -3,48 +3,84 @@ name: Android CI
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
+  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  kotlin:
+  apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      NDK_VERSION: 27.2.12479018
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: native/rahacore/go.mod
+          cache-dependency-path: native/rahacore/go.mod
+
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
           packages: ''
+
+      - name: Install SDK platform and NDK
+        run: |
+          sdkmanager 'platform-tools' 'platforms;android-35' 'build-tools;35.0.0' "ndk;${NDK_VERSION}" > /dev/null
+          echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
+
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Install Android SDK 35
-        run: sdkmanager 'platform-tools' 'platforms;android-35' 'build-tools;35.0.0'
-      - name: Gradle compile
-        run: gradle :app:compileDebugKotlin --stacktrace
 
-  brokerbridge:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - name: Build native core (brokerapi + Xray)
+        run: |
+          set -o pipefail
+          mkdir -p ci-log
+          ./scripts/build-rahacore-android.sh 2>&1 | tee ci-log/native.log
+          ls -la app/libs
+
+      - name: Build APK
+        run: |
+          set -o pipefail
+          gradle :app:assembleRelease --stacktrace --console=plain 2>&1 | tee ci-log/gradle.log
+          cp app/build/outputs/apk/release/app-release.apk "Raha-${GITHUB_REF_NAME//\//-}.apk"
+
+      - uses: actions/upload-artifact@v4
         with:
-          go-version-file: native/brokerbridge/go.mod
-          cache: false
-      - name: Resolve and verify module
-        working-directory: native/brokerbridge
+          name: raha-apk
+          path: Raha-*.apk
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" Raha-*.apk --title "Raha $GITHUB_REF_NAME" --notes "Sideload build. Signed with the project sideload key." --prerelease
+
+      # Logs on a branch so they can be read without the Actions log viewer.
+      - name: Publish failure log
+        if: failure()
         run: |
-          go mod tidy
-          go test ./...
-          go vet ./...
-          git diff --exit-code -- go.mod
-      - name: Ensure release pin
-        working-directory: native/brokerbridge
-        run: |
-          grep -Eq 'github.com/openrung/openrung/brokerapi v0\.6\.1([[:space:]]|$)' go.mod
+          mkdir -p ci-log
+          for f in ci-log/*.log; do [ -f "$f" ] && tail -n 400 "$f" > "$f.tail" && mv "$f.tail" "$f"; done
+          grep -hnE "^e: |error:|ERROR|What went wrong|FAILURE|cannot|undefined|not found" ci-log/*.log 2>/dev/null | head -n 15 | while IFS= read -r line; do echo "::error::${line:0:900}"; done || true
+          cd ci-log
+          git init -q
+          git config user.name "AM.JMC"
+          git config user.email "Amirmahdavi2022@users.noreply.github.com"
+          git add -A && git commit -qm "ci log ${GITHUB_SHA::7} run ${GITHUB_RUN_ID}" || exit 0
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/ci-log

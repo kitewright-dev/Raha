@@ -68,7 +68,7 @@ WSS/CDN, NAT punching, relay hubs and other fallback paths are explicitly deferr
 The Android application should contain:
 
 - `RahaVpnService`: Android VPN lifecycle and TUN ownership
-- `RahaEngine`: starts/stops the packet-routing engine
+- `rahacore` (Go, gomobile): verified discovery + Xray-core engine on the TUN fd
 - `RelayRepository`: aggregates discovery providers
 - `RelayRanker`: candidate ordering
 - `ConnectionManager`: connection state machine
