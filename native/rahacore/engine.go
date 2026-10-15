@@ -17,9 +17,9 @@ import (
 	"sync"
 	"time"
 
+	xnet "github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/features/stats"
-	xnet "github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/infra/conf/serial"
 
 	// Registers every Xray feature (vless, reality, tun, freedom, ...).
@@ -106,30 +106,12 @@ func buildInstance(cfg map[string]any) (*core.Instance, error) {
 	return core.New(config)
 }
 
-// ProbeRelay performs a real VLESS + REALITY + Vision handshake against the
-// relay and fetches a 204 page through it. It returns the end-to-end latency in
-// milliseconds. A plain TCP connect proves nothing on a filtered network; this
-// does.
-func ProbeRelay(relayJSON string, timeoutMs int) (int64, error) {
-	r, err := parseRelay(relayJSON)
-	if err != nil {
-		return 0, err
-	}
+// fetch204 opens probeURL through the given instance's default outbound and
+// returns the end-to-end time in milliseconds.
+func fetch204(inst *core.Instance, timeoutMs int) (int64, error) {
 	if timeoutMs < 1000 {
 		timeoutMs = 1000
 	}
-	inst, err := buildInstance(map[string]any{
-		"log":       map[string]any{"loglevel": "none"},
-		"outbounds": []any{proxyOutbound(r)},
-	})
-	if err != nil {
-		return 0, err
-	}
-	if err := inst.Start(); err != nil {
-		return 0, err
-	}
-	defer inst.Close()
-
 	transport := &http.Transport{
 		DisableKeepAlives: true,
 		DialContext: func(ctx context.Context, _ string, addr string) (net.Conn, error) {
@@ -164,9 +146,71 @@ func ProbeRelay(relayJSON string, timeoutMs int) (int64, error) {
 	return time.Since(start).Milliseconds(), nil
 }
 
+// ProbeRelay performs a real VLESS + REALITY + Vision handshake against the
+// relay and fetches a 204 page through it. It returns the end-to-end latency in
+// milliseconds. A plain TCP connect proves nothing on a filtered network; this
+// does.
+func ProbeRelay(relayJSON string, timeoutMs int) (int64, error) {
+	r, err := parseRelay(relayJSON)
+	if err != nil {
+		return 0, err
+	}
+	inst, err := buildInstance(map[string]any{
+		"log":       map[string]any{"loglevel": "none"},
+		"outbounds": []any{proxyOutbound(r)},
+	})
+	if err != nil {
+		return 0, err
+	}
+	if err := inst.Start(); err != nil {
+		return 0, err
+	}
+	defer inst.Close()
+	return fetch204(inst, timeoutMs)
+}
+
+// HealthCheck tests the relay the running tunnel is using, through that same
+// engine. It returns the round-trip time in milliseconds.
+func HealthCheck(timeoutMs int) (int64, error) {
+	mu.Lock()
+	inst := instance
+	mu.Unlock()
+	if inst == nil {
+		return 0, fmt.Errorf("tunnel is not running")
+	}
+	return fetch204(inst, timeoutMs)
+}
+
+// Traffic from engines replaced by a relay switch, so the session totals keep
+// counting across switches.
+var carriedUp, carriedDown int64
+
+func liveCounter(inst *core.Instance, name string) int64 {
+	if inst == nil {
+		return 0
+	}
+	m, ok := inst.GetFeature(stats.ManagerType()).(stats.Manager)
+	if !ok || m == nil {
+		return 0
+	}
+	c := m.GetCounter(name)
+	if c == nil {
+		return 0
+	}
+	return c.Value()
+}
+
+const (
+	upCounter   = "outbound>>>proxy>>>traffic>>>uplink"
+	downCounter = "outbound>>>proxy>>>traffic>>>downlink"
+)
+
 // StartTunnel runs Xray with its TUN inbound bound to the VpnService file
 // descriptor. The descriptor stays owned by Kotlin: Xray works on a duplicate,
 // so Kotlin closes its ParcelFileDescriptor only after StopTunnel.
+//
+// Calling it again while a tunnel is up switches relays on the same TUN: the
+// VPN stays established and only the engine behind it is replaced.
 func StartTunnel(relayJSON string, tunFd int, mtu int) error {
 	r, err := parseRelay(relayJSON)
 	if err != nil {
@@ -182,6 +226,8 @@ func StartTunnel(relayJSON string, tunFd int, mtu int) error {
 	mu.Lock()
 	defer mu.Unlock()
 	if instance != nil {
+		carriedUp += liveCounter(instance, upCounter)
+		carriedDown += liveCounter(instance, downCounter)
 		_ = instance.Close()
 		instance = nil
 	}
@@ -219,10 +265,11 @@ func StartTunnel(relayJSON string, tunFd int, mtu int) error {
 	return nil
 }
 
-// StopTunnel stops the engine. Safe to call more than once.
+// StopTunnel stops the engine and ends the session. Safe to call more than once.
 func StopTunnel() error {
 	mu.Lock()
 	defer mu.Unlock()
+	carriedUp, carriedDown = 0, 0
 	if instance == nil {
 		return nil
 	}
@@ -231,28 +278,19 @@ func StopTunnel() error {
 	return err
 }
 
-func counter(name string) int64 {
+// UplinkBytes is the total bytes sent through relays this session.
+func UplinkBytes() int64 {
 	mu.Lock()
 	defer mu.Unlock()
-	if instance == nil {
-		return 0
-	}
-	m, ok := instance.GetFeature(stats.ManagerType()).(stats.Manager)
-	if !ok || m == nil {
-		return 0
-	}
-	c := m.GetCounter(name)
-	if c == nil {
-		return 0
-	}
-	return c.Value()
+	return carriedUp + liveCounter(instance, upCounter)
 }
 
-// UplinkBytes is the total bytes sent through the relay this session.
-func UplinkBytes() int64 { return counter("outbound>>>proxy>>>traffic>>>uplink") }
-
-// DownlinkBytes is the total bytes received through the relay this session.
-func DownlinkBytes() int64 { return counter("outbound>>>proxy>>>traffic>>>downlink") }
+// DownlinkBytes is the total bytes received through relays this session.
+func DownlinkBytes() int64 {
+	mu.Lock()
+	defer mu.Unlock()
+	return carriedDown + liveCounter(instance, downCounter)
+}
 
 // IsRunning reports whether the packet engine is up.
 func IsRunning() bool {

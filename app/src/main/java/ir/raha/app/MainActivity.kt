@@ -127,13 +127,21 @@ class MainActivity : ComponentActivity() {
                 show(OrbButton.Mode.ON, ON_GLOW, "Connected", "via ${state.relayName}")
                 bindExit(state)
             }
+            is ConnectionState.Reconnecting ->
+                show(OrbButton.Mode.BUSY, BUSY_GLOW, "Switching relay…", state.reason)
             ConnectionState.Stopping ->
                 show(OrbButton.Mode.BUSY, BUSY_GLOW, "Disconnecting…", "")
             is ConnectionState.Failed ->
                 show(OrbButton.Mode.FAIL, FAIL_GLOW, "Couldn't connect", state.reason)
         }
-        setStatsVisible(state is ConnectionState.Connected)
-        if (state is ConnectionState.Connected) startStats(state.sinceElapsed) else stopStats()
+        val since = when (state) {
+            is ConnectionState.Connected -> state.sinceElapsed
+            is ConnectionState.Reconnecting -> state.sinceElapsed
+            else -> null
+        }
+        // Stats stay on screen through a relay switch; the session keeps counting.
+        setStatsVisible(since != null)
+        if (since != null) startStats(since) else stopStats()
     }
 
     private fun show(mode: OrbButton.Mode, glowTarget: Int, title: String, sub: String) {

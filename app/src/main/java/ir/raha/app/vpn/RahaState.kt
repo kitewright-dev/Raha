@@ -16,6 +16,8 @@ sealed interface ConnectionState {
         /** SystemClock.elapsedRealtime() when the tunnel came up. */
         val sinceElapsed: Long
     ) : ConnectionState
+    /** The tunnel stays up while Raha moves to another relay. */
+    data class Reconnecting(val reason: String, val sinceElapsed: Long) : ConnectionState
     data object Stopping : ConnectionState
     data class Failed(val reason: String) : ConnectionState
 }
