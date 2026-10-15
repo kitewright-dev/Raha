@@ -58,18 +58,26 @@ jobs:
         run: |
           set -o pipefail
           gradle :app:assembleRelease --stacktrace --console=plain 2>&1 | tee ci-log/gradle.log
-          cp app/build/outputs/apk/release/app-release.apk "Raha-${GITHUB_REF_NAME//\//-}.apk"
+          cp app/build/outputs/apk/release/app-release.apk Raha-build.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: raha-apk
           path: Raha-*.apk
 
+      # A push to main whose versionName has no release yet cuts one (tag included).
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" Raha-*.apk --title "Raha $GITHUB_REF_NAME" --notes "Sideload build. Signed with the project sideload key." --prerelease
+        run: |
+          VERSION="v$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)"
+          if gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "$VERSION already released"; exit 0
+          fi
+          cp Raha-build.apk "Raha-${VERSION}.apk"
+          gh release create "$VERSION" "Raha-${VERSION}.apk" --target "$GITHUB_SHA" \
+            --title "Raha $VERSION" --notes "Sideload build, signed with the project sideload key. Installs over earlier Raha builds." --prerelease
 
       # Logs on a branch so they can be read without the Actions log viewer.
       - name: Publish failure log

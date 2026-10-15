@@ -65,7 +65,7 @@ If nothing passes step 4 the VPN never comes up, so you don't end up with a dead
 - `native/rahacore` Go core built with gomobile: `brokerapi` for discovery, Xray-core for the engine
 - `app/` Android app (Kotlin, no XML layouts)
 - `scripts/build-rahacore-android.sh` builds `app/libs/rahacore.aar`
-- CI builds the APK on every push to main, and publishes a release on `v*` tags
+- CI builds the APK on every push to main, and cuts a release whenever `versionName` changes
 
 ## Build
 
