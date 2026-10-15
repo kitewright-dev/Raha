@@ -3,16 +3,17 @@ package ir.raha.app.discovery
 /**
  * OpenRung source adapter.
  *
- * Intentionally not implemented with a hand-written JSON fetch. OpenRung's
- * relay directory is signed and its official clients verify the raw response.
- * Raha will integrate a pinned verifier/adapter before enabling this source.
+ * The network implementation is deliberately injected: it must use the pinned
+ * OpenRung brokerapi binding (or an equivalent independently audited verifier)
+ * and return only exact, signature-verified directory bytes.
  */
-class OpenRungProvider : DiscoveryProvider {
+class OpenRungProvider(
+    private val directorySource: VerifiedDirectorySource
+) : DiscoveryProvider {
     override val id: String = "openrung"
 
     override suspend fun discover(): List<RelayCandidate> {
-        throw IllegalStateException(
-            "OpenRung source disabled until signed-directory verification is wired"
-        )
+        val verified = directorySource.fetchVerifiedRelayDirectory()
+        return VerifiedRelayDirectory.parseOpenRung(verified)
     }
 }
