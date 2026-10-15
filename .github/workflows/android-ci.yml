@@ -17,13 +17,15 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
       - name: Install Android SDK 35
-        run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager 'platform-tools' 'platforms;android-35' 'build-tools;35.0.0'
+        run: sdkmanager 'platform-tools' 'platforms;android-35' 'build-tools;35.0.0'
       - name: Gradle compile
         run: gradle :app:compileDebugKotlin --stacktrace
 
@@ -34,6 +36,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: native/brokerbridge/go.mod
+          cache: false
       - name: Resolve and verify module
         working-directory: native/brokerbridge
         run: |
