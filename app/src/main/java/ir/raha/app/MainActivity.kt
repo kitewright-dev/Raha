@@ -26,6 +26,9 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -74,8 +77,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.statusBarColor = BG
-        window.navigationBarColor = BG
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
         setContentView(buildContent())
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -186,7 +190,7 @@ class MainActivity : ComponentActivity() {
             statsCard.animate().alpha(1f).translationY(0f).setDuration(240).setInterpolator(EASE_OUT).start()
         } else {
             statsCard.animate().alpha(0f).setDuration(150).setInterpolator(EASE_OUT)
-                .withEndAction { statsCard.visibility = View.INVISIBLE }.start()
+                .withEndAction { statsCard.visibility = View.GONE }.start()
         }
     }
 
@@ -220,15 +224,22 @@ class MainActivity : ComponentActivity() {
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(px(20), px(28), px(20), px(24))
+            setPadding(px(20), px(40), px(20), px(48))
+        }
+        // Android 15 draws apps edge to edge: keep content clear of the status
+        // and navigation bars while the background glow runs behind them.
+        ViewCompat.setOnApplyWindowInsetsListener(frame) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            root.setPadding(px(20) + bars.left, px(14) + bars.top, px(20) + bars.right, px(24) + bars.bottom)
+            insets
         }
 
         root.addView(header())
 
         orb = OrbButton(this).apply { setOnClickListener { onOrbTapped() } }
-        root.addView(orb, LinearLayout.LayoutParams(px(280), px(280)).apply {
+        root.addView(orb, LinearLayout.LayoutParams(px(264), px(264)).apply {
             gravity = Gravity.CENTER_HORIZONTAL
-            topMargin = px(18)
+            topMargin = px(22)
         })
 
         status = TextView(this).apply {
@@ -247,11 +258,10 @@ class MainActivity : ComponentActivity() {
         }
         root.addView(detail, LinearLayout.LayoutParams(-1, -2))
 
-        statsCard = statsCard().apply { alpha = 0f; visibility = View.INVISIBLE }
-        root.addView(statsCard, LinearLayout.LayoutParams(-1, -2).apply { topMargin = px(26) })
+        statsCard = statsCard().apply { alpha = 0f; visibility = View.GONE }
+        root.addView(statsCard, LinearLayout.LayoutParams(-1, -2).apply { topMargin = px(22) })
 
-        root.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f).apply { height = px(18) })
-        root.addView(supportCard(), LinearLayout.LayoutParams(-1, -2))
+        root.addView(supportCard(), LinearLayout.LayoutParams(-1, -2).apply { topMargin = px(14) })
 
         val scroll = ScrollView(this).apply {
             isFillViewport = true
@@ -351,15 +361,9 @@ class MainActivity : ComponentActivity() {
         }
         setOnTouchListener(pressFeedback())
 
-        addView(TextView(this@MainActivity).apply {
-            text = "✈"
-            textSize = 18f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                colors = intArrayOf(Color.parseColor("#2AABEE"), Color.parseColor("#229ED9"))
-            }
+        addView(ImageView(this@MainActivity).apply {
+            setImageResource(R.drawable.ic_telegram)
+            contentDescription = null
         }, LinearLayout.LayoutParams(px(40), px(40)))
         addView(LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
