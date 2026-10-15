@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/xtls/xray-core/core"
+	"github.com/xtls/xray-core/features/stats"
 	xnet "github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/infra/conf/serial"
 
@@ -190,7 +191,12 @@ func StartTunnel(relayJSON string, tunFd int, mtu int) error {
 	_ = os.Setenv("XRAY_TUN_FD", fd)
 
 	inst, err := buildInstance(map[string]any{
-		"log": map[string]any{"loglevel": "warning"},
+		"log":   map[string]any{"loglevel": "warning"},
+		"stats": map[string]any{},
+		"policy": map[string]any{"system": map[string]any{
+			"statsOutboundUplink":   true,
+			"statsOutboundDownlink": true,
+		}},
 		"inbounds": []any{map[string]any{
 			"tag":      "tun",
 			"port":     0,
@@ -224,6 +230,29 @@ func StopTunnel() error {
 	instance = nil
 	return err
 }
+
+func counter(name string) int64 {
+	mu.Lock()
+	defer mu.Unlock()
+	if instance == nil {
+		return 0
+	}
+	m, ok := instance.GetFeature(stats.ManagerType()).(stats.Manager)
+	if !ok || m == nil {
+		return 0
+	}
+	c := m.GetCounter(name)
+	if c == nil {
+		return 0
+	}
+	return c.Value()
+}
+
+// UplinkBytes is the total bytes sent through the relay this session.
+func UplinkBytes() int64 { return counter("outbound>>>proxy>>>traffic>>>uplink") }
+
+// DownlinkBytes is the total bytes received through the relay this session.
+func DownlinkBytes() int64 { return counter("outbound>>>proxy>>>traffic>>>downlink") }
 
 // IsRunning reports whether the packet engine is up.
 func IsRunning() bool {

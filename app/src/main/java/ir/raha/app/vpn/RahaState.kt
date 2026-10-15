@@ -8,7 +8,14 @@ sealed interface ConnectionState {
     data object Idle : ConnectionState
     data object Discovering : ConnectionState
     data class Testing(val candidates: Int) : ConnectionState
-    data class Connected(val relayName: String, val country: String?, val latencyMs: Long) : ConnectionState
+    data class Connected(
+        val relayName: String,
+        val countryCode: String?,
+        val city: String?,
+        val latencyMs: Long,
+        /** SystemClock.elapsedRealtime() when the tunnel came up. */
+        val sinceElapsed: Long
+    ) : ConnectionState
     data object Stopping : ConnectionState
     data class Failed(val reason: String) : ConnectionState
 }

@@ -10,6 +10,7 @@ import android.content.pm.ServiceInfo
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.os.SystemClock
 import ir.raha.app.MainActivity
 import ir.raha.app.R
 import ir.raha.app.discovery.NativeDirectorySource
@@ -59,7 +60,13 @@ class RahaVpnService : VpnService() {
                 ensureActive()
 
                 RahaState.set(
-                    ConnectionState.Connected(selected.relay.displayName, selected.relay.country, selected.latencyMs)
+                    ConnectionState.Connected(
+                        relayName = selected.relay.displayName,
+                        countryCode = selected.relay.country,
+                        city = selected.relay.metadata["city"]?.takeIf { it.isNotBlank() },
+                        latencyMs = selected.latencyMs,
+                        sinceElapsed = SystemClock.elapsedRealtime()
+                    )
                 )
                 updateNotification(getString(R.string.notif_connected, selected.relay.displayName))
             } catch (e: CancellationException) {
