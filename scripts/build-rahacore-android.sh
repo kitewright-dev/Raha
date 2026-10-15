@@ -14,9 +14,10 @@ cd "$MODULE"
 export GOWORK=off
 go install golang.org/x/mobile/cmd/gomobile@latest
 go install golang.org/x/mobile/cmd/gobind@latest
-go get golang.org/x/mobile/bind@latest
 go mod tidy
 go vet ./...
+# gomobile needs x/mobile in the module graph; a tool directive keeps it there.
+go get -tool golang.org/x/mobile/cmd/gobind@latest
 "$(go env GOPATH)/bin/gomobile" init
 "$(go env GOPATH)/bin/gomobile" bind \
   -target=android/arm64,android/arm \
